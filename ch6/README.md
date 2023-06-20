@@ -11,7 +11,7 @@ docker run --rm -it \
   --name delta_quickstart \
   -v $DLDG_CHAPTER_DIR/:/opt/spark/work-dir/ch6 \
   -p 8888-8889:8888-8889 \
-  delta_quickstart:latest
+  deltaio/delta-docker:latest
 ~~~
 
 ## Running with Docker Compose
