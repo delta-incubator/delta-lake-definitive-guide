@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  flink-jobmanager:
+    image: flink:1.17.1-scala_2.12
+    platform: linux/amd64
+    hostname: flink-job-manager
+    container_name: flink-job-manager
+    command: jobmanager
+    environment:
+      - FLINK_PROPERTIES="${FLINK_PROPERTIES}"
+    volumes:
+      - ${PWD}/data:/opt/data
+    ports:
+      - 8081:8081
+    restart: always
+    networks:
+      - dldg
+  
+  flink-taskmanager:
+    image: flink:1.17.1-scala_2.12
+    platform: linux/amd64
+    hostname: flink-task-manager
+    container_name: flink-task-manager
+    command: taskmanager
+    environment:
+      - FLINK_PROPERTIES="${FLINK_PROPERTIES}"
+    volumes:
+      - ${PWD}/data:/opt/data
+    #ports:
+    #  - 8081:8081
+    restart: always
+    networks:
+      - dldg
+
+networks:
+  dldg:
+    external: true
+    name: dldg
