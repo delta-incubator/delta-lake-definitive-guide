@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 
 services:
   flink-jobmanager:
@@ -8,12 +8,21 @@ services:
     container_name: flink-job-manager
     command: jobmanager
     environment:
-      - FLINK_PROPERTIES="${FLINK_PROPERTIES}"
+      - FLINK_PROPERTIES=${FLINK_PROPERTIES}
     volumes:
       - ${PWD}/data:/opt/data
     ports:
-      - 8081:8081
-    restart: always
+      - target: 8081
+        published: 8888
+        protocol: tcp
+        mode: host
+      - target: 6123
+        published: 6123
+        protocol: tcp
+        mode: host
+    expose:
+      - "8081"
+    restart: unless-stopped
     networks:
       - dldg
   
@@ -24,12 +33,57 @@ services:
     container_name: flink-task-manager
     command: taskmanager
     environment:
-      - FLINK_PROPERTIES="${FLINK_PROPERTIES}"
+      - FLINK_PROPERTIES=${FLINK_PROPERTIES}
     volumes:
-      - ${PWD}/data:/opt/data
-    #ports:
-    #  - 8081:8081
-    restart: always
+      - "${PWD}/data:/opt/data"
+    restart: unless-stopped
+    depends_on:
+      - flink-jobmanager
+    networks:
+      - dldg
+
+  kafka:
+    hostname: kafka-rp
+    container_name: kafka-rp
+    image: docker.redpanda.com/redpandadata/redpanda:v23.1.13
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://kafka-rp:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://kafka-rp:28082,OUTSIDE://localhost:8082
+    networks:
+      - dldg
+    ports:
+      - "8082:8082"
+      - "9092:9092"
+      - "28082:28082"
+      - "29092:29092"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.0
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - kafka
+    ports:
+      - "8088:8088"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka-rp:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8088
     networks:
       - dldg
 
