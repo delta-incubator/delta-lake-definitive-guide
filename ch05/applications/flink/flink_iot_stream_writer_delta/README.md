@@ -9,5 +9,13 @@ This application provides the building blocks to read and write from Delta Lake 
 
 ## Building
 ~~~
-mvn clean test && mvn compile && mvn package
+mvn clean verify && mvn compile
+~~~
+
+## Running
+~~~
+$FLINK_HOME/bin/flink run \
+  --detached \
+  --jobmanager 127.0.0.1:8888 \
+  --jarfile ./target/delta-flink-examples.jar
 ~~~

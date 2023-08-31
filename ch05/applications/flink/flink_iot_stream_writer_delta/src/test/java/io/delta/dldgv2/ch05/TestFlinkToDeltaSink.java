@@ -1,37 +1,47 @@
 package io.delta.dldgv2.ch05;
 
+import io.delta.dldgv2.ch05.pojo.Ecommerce;
 import io.delta.flink.sink.DeltaSink;
+import io.delta.standalone.DeltaLog;
+import io.delta.standalone.types.StructField;
 import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
 import org.apache.flink.configuration.RestOptions;
-import org.apache.flink.core.fs.Path;
+import org.apache.flink.connector.datagen.source.DataGeneratorSource;
+import org.apache.flink.connector.datagen.source.GeneratorFunction;
 import org.apache.flink.runtime.minicluster.MiniCluster;
 import org.apache.flink.runtime.minicluster.MiniClusterConfiguration;
 import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.logical.*;
-import org.apache.flink.types.Row;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.test.util.MiniClusterWithClientResource;
+import org.apache.hadoop.conf.Configuration;
+import org.junit.jupiter.api.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.delta.dldgv2.ch05.DeltaTestUtils.buildCluster;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestFlinkToDeltaSink {
 
     public static final TemporaryFolder TEMPORARY_FOLDER = new TemporaryFolder();
 
+    private final MiniClusterWithClientResource miniClusterResource = buildCluster(10);
+
     private String deltaTablePath;
+
+    //private Path savepointPath;
 
 
     @BeforeAll
@@ -44,60 +54,117 @@ public class TestFlinkToDeltaSink {
         TEMPORARY_FOLDER.delete();
     }
 
+    private static StreamExecutionEnvironment getTestStreamEnv() {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.enableCheckpointing(10, CheckpointingMode.EXACTLY_ONCE);
+        return env;
+    }
+
     @BeforeEach
-    public void setup() {
+    public void setup() throws IOException {
         try {
-            deltaTablePath = TEMPORARY_FOLDER.newFolder().getAbsolutePath();
-        } catch (IOException e) {
+            miniClusterResource.before();
+        } catch (Exception e) {
             throw new RuntimeException("Weren't able to setup the test dependencies", e);
         }
+        deltaTablePath = TEMPORARY_FOLDER.newFolder().getAbsolutePath();
+        //savepointPath = TEMPORARY_FOLDER.newFolder().toPath();
+    }
+
+    @AfterEach
+    public void teardown() {
+        miniClusterResource.after();
     }
 
     @Test
     public void testWriteToDeltaTable() throws Exception {
-        // GIVEN
-        RowType rowType = new RowType(
-                Arrays.asList(
-                        new RowType.RowField("f1", new FloatType()),
-                        new RowType.RowField("f2", new IntType()),
-                        new RowType.RowField("f3", new VarCharType()),
-                        new RowType.RowField("f4", new DoubleType()),
-                        new RowType.RowField("f5", new BooleanType()),
-                        new RowType.RowField("f6", new TinyIntType()),
-                        new RowType.RowField("f7", new SmallIntType()),
-                        new RowType.RowField("f8", new BigIntType()),
-                        new RowType.RowField("f9", new BinaryType()),
-                        new RowType.RowField("f10", new VarBinaryType()),
-                        new RowType.RowField("f11", new TimestampType()),
-                        new RowType.RowField("f12", new LocalZonedTimestampType()),
-                        new RowType.RowField("f13", new DateType()),
-                        new RowType.RowField("f14", new CharType()),
-                        new RowType.RowField("f15", new DecimalType()),
-                        new RowType.RowField("f16", new DecimalType(4, 2))
-                ));
 
-        Integer value = 1;
+        final StreamExecutionEnvironment env = getTestStreamEnv();
+        env.registerType(Ecommerce.class);
+        env.getConfig().enableForceAvro();
 
-        Row testRow = Row.of(
-                value.floatValue(), // float type
-                value, // int type
-                value.toString(), // varchar type
-                value.doubleValue(), // double type
-                false, // boolean type
-                value.byteValue(), // tiny int type
-                value.shortValue(), // small int type
-                value.longValue(), // big int type
-                String.valueOf(value).getBytes(StandardCharsets.UTF_8), // binary type
-                String.valueOf(value).getBytes(StandardCharsets.UTF_8), // varbinary type
-                LocalDateTime.now(ZoneOffset.systemDefault()), // timestamp type
-                Instant.now(), // local zoned timestamp type
-                LocalDate.now(), // date type
-                String.valueOf(value), // char type
-                BigDecimal.valueOf(value), // decimal type
-                new BigDecimal("11.11") // decimal(4,2) type
-        );
+        final GeneratorFunction<Long, RowData> generatorFunction = DeltaTestUtils.DataGenUtil::generateNextRow;
+
+        long numberOfRecords = 1000;
+        double recordsPerSecond = 500;
+        int numSources = 1;
+        int numSinks = 1;
+
+        final InternalTypeInfo<RowData> typeInfo = InternalTypeInfo.of(Ecommerce.ECOMMERCE_ROW_TYPE);
+
+        final DataGeneratorSource<RowData> source =
+                new DataGeneratorSource<>(
+                        generatorFunction,
+                        numberOfRecords,
+                        RateLimiterStrategy.perSecond(recordsPerSecond),
+                        typeInfo);
+
+        // create the DataStreamSource and begin the Job Graph
+        final DataStreamSource<RowData> stream = env
+                .fromSource(source, WatermarkStrategy.noWatermarks(), "Ecommerce Generator Source");
+        // we only have one source
+        stream.setParallelism(numSources);
+
+        // delta info
+        org.apache.flink.core.fs.Path deltaTable = new org.apache.flink.core.fs.Path(deltaTablePath);
+        var config = new Configuration();
+        DeltaSink<RowData> deltaSink = DeltaSink
+                .forRowData(
+                        deltaTable,
+                        config,
+                        Ecommerce.ECOMMERCE_ROW_TYPE
+                )
+
+                .withMergeSchema(false)
+                // withPartitionColumns(partitionCols)
+                .build();
+
+        stream.sinkTo(deltaSink);
+        stream.name("DeltaSink");
+        stream.setParallelism(numSinks);
+
+        // run the flink job
+        // this will block and that is good since we can test that things all worked as expected
+        env.execute();
 
 
+        //final DeltaSource<RowData> deltaSourceData = DeltaSource.forBoundedRowData(deltaTable, config).build();
+
+        // now that the application has run through all the records, and created the Delta Table.
+        // we can read it back
+
+        final DeltaLog deltaLog = DeltaLog.forTable(DeltaTestUtils.getHadoopConf(), deltaTablePath);
+
+        var records = DeltaTestUtils.ParquetUtil.readAndValidateAllTableRecords(deltaLog);
+
+        assertEquals(records, numberOfRecords);
+
+        // this is the first time creating the table, and it will be removed at the end of the test
+        long initialVersion = deltaLog.snapshot().getVersion();
+        assertEquals(initialVersion, 0L);
+
+        var tableMetadata = deltaLog.snapshot().getMetadata();
+
+        var schema = tableMetadata.getSchema();
+
+        var fields = Arrays.stream(schema.getFields())
+                .map(StructField::getName)
+                .collect(Collectors.toSet());
+        assertEquals(fields.size(), Ecommerce.ECOMMERCE_ROW_TYPE.getFieldNames().size());
+
+        assertTrue(deltaLog.tableExists());
+    }
+
+    @Test
+    public void TestRecordGenerator() throws Exception {
+
+        var rows = Stream
+                .generate(new DeltaTestUtils.DataGenUtil.RowSupplier())
+                .limit(1000)
+                .collect(Collectors.toList());
+
+        assertEquals(1000, rows.size());
     }
 
     /**
@@ -119,10 +186,13 @@ public class TestFlinkToDeltaSink {
     private void runFlinkJob(RowType rowType,
                              List<RowData> testData) {
         StreamExecutionEnvironment env = getTestStreamEnv();
+        env.registerType(Ecommerce.class);
+
         DeltaSink<RowData> deltaSink = DeltaSink
                 .forRowData(
-                        new Path(deltaTablePath),
-                        DeltaTestUtils.getHadoopConf(), rowType).build();
+                        new org.apache.flink.core.fs.Path(deltaTablePath),
+                        DeltaTestUtils.getHadoopConf(), rowType)
+                .build();
         env.fromCollection(testData).sinkTo(deltaSink);
         try {
             env.execute();
@@ -131,11 +201,29 @@ public class TestFlinkToDeltaSink {
         }
     }
 
-    private static StreamExecutionEnvironment getTestStreamEnv() {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setRuntimeMode(RuntimeExecutionMode.BATCH);
-        env.enableCheckpointing(10, CheckpointingMode.EXACTLY_ONCE);
-        return env;
+    public void runFlinkJobInBackground(StreamExecutionEnvironment env) {
+        new Thread(() -> {
+            try (MiniCluster miniCluster = getMiniCluster()) {
+                miniCluster.start();
+                miniCluster.executeJobBlocking(env.getStreamGraph().getJobGraph());
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        }).start();
+    }
+
+    public MiniCluster getMiniCluster() {
+        final org.apache.flink.configuration.Configuration config =
+                new org.apache.flink.configuration.Configuration();
+        config.setString(RestOptions.BIND_PORT, "18081-19000");
+        final MiniClusterConfiguration cfg =
+                new MiniClusterConfiguration.Builder()
+                        .setNumTaskManagers(2)
+                        .setNumSlotsPerTaskManager(4)
+                        .setConfiguration(config)
+                        .build();
+        return new MiniCluster(cfg);
     }
 
 }

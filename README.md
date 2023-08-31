@@ -28,3 +28,8 @@ We have collected here the code snippets found in the book (and a few extras too
 ## Chapter 13: Design Patterns
 ## Chapter 14: Security and Governance
 ## Appendix
+
+## Running Chapter Contents from Root
+~~~
+docker compose -f ch05/docker-compose-arm64-flink.yaml up --remove-orphans
+~~~
