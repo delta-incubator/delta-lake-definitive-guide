@@ -3,7 +3,6 @@ package io.delta.dldgv2.ch05;
 import io.delta.dldgv2.ch05.pojo.Ecommerce;
 import io.delta.dldgv2.ch05.utils.DeltaUtils;
 import io.delta.flink.sink.DeltaSink;
-import org.apache.commons.io.FileUtils;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -11,6 +10,7 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
+import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
@@ -18,24 +18,28 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class FlinkToDeltaSink {
     final static String defaultTableName = "ecomm_v1_clickstream";
+    final static String defaultDeltaRootDir = "/tmp/delta";
+    final static String defaultCheckpointDir = "/tmp/checkpoints/";
+    public static Logger logger = LoggerFactory.getLogger(FlinkToDeltaSink.class);
+
     final static int NUM_SOURCES = 1;
     final static int NUM_SINKS = 1;
-    public static Logger logger = LoggerFactory.getLogger(FlinkToDeltaSink.class);
+
+    final String defaultFs;
+
     final public ParameterTool appProps;
 
     public FlinkToDeltaSink(final String[] args) throws IOException {
         final String propertiesFileName = (args.length > 0) ? args[0] : "app.properties";
         ClassLoader classLoader = getClass().getClassLoader();
         this.appProps = ParameterTool.fromPropertiesFile(classLoader.getResourceAsStream(propertiesFileName));
+        this.defaultFs = this.appProps.get("flink.default.fs.prefix", "file://");
     }
 
     public static void main(final String[] args) throws Exception {
@@ -85,10 +89,15 @@ public class FlinkToDeltaSink {
                 .build();
     }
 
+    /**
+     * Generates a DeltaSink instance leaning on the application properties for config driven development
+     * @return The DeltaSink instance bound to generic row data (like Spark DataFrame)
+     * @throws IOException when the Delta Table path is non-resolvable
+     */
     public DeltaSink<RowData> getDeltaSink() throws IOException {
         // setup all the Delta Lake sink related configurations
         var deltaTable = this.appProps.get("delta.sink.tableName", defaultTableName);
-        var deltaTablePath = this.appProps.get("delta.sink.tablePath", "/tmp/delta");
+        var deltaTablePath = this.appProps.get("delta.sink.tablePath", defaultDeltaRootDir);
         var fullDeltaTablePath = Paths.get(deltaTablePath, deltaTable).toString();
         var deleteTableIfExists = this.appProps
                 .getBoolean("runtime.cleaner.delete.deltaTable", false);
@@ -98,7 +107,7 @@ public class FlinkToDeltaSink {
         boolean mergeSchema = this.appProps.getBoolean("delta.sink.mergeSchema", false);
         return DeltaSink
                 .forRowData(
-                        new Path(deltaTablePath),
+                        new Path(fullDeltaTablePath),
                         new Configuration(),
                         Ecommerce.ECOMMERCE_ROW_TYPE
                 )
@@ -106,12 +115,22 @@ public class FlinkToDeltaSink {
                 .build();
     }
 
+    /**
+     * Generates the runtime Execution Environment for Apache Flink
+     * @return The StreamExecutionEnvironment handle for the application
+     */
     public StreamExecutionEnvironment getExecutionEnvironment() {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
         env.enableCheckpointing(2000, CheckpointingMode.EXACTLY_ONCE);
+
+        if (this.appProps.getBoolean("flink.state.backend.enabled", false)) {
+            env.setStateBackend(new HashMapStateBackend());
+            var checkpointDir = this.appProps.get("flink.checkpoint.storage.dir", defaultCheckpointDir);
+            env.getCheckpointConfig().setCheckpointStorage(this.defaultFs + "/" + checkpointDir);
+        }
+
         return env;
     }
 

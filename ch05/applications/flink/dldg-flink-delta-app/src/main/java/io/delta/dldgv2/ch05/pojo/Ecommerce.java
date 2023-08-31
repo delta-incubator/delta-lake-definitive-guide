@@ -11,7 +11,7 @@ import org.apache.flink.types.Row;
 
 import java.util.Arrays;
 
-public class Ecommerce {
+public final class Ecommerce {
     @JsonProperty("event_time")
     public String eventTime;
     @JsonProperty("event_type")

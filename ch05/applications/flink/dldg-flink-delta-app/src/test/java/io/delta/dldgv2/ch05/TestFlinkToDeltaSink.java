@@ -4,15 +4,14 @@ import io.delta.dldgv2.ch05.pojo.Ecommerce;
 import io.delta.flink.sink.DeltaSink;
 import io.delta.standalone.DeltaLog;
 import io.delta.standalone.types.StructField;
-import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.connector.datagen.source.DataGeneratorSource;
 import org.apache.flink.connector.datagen.source.GeneratorFunction;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.runtime.minicluster.MiniCluster;
 import org.apache.flink.runtime.minicluster.MiniClusterConfiguration;
-import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
@@ -54,11 +53,8 @@ public class TestFlinkToDeltaSink {
         TEMPORARY_FOLDER.delete();
     }
 
-    private static StreamExecutionEnvironment getTestStreamEnv() {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
-        env.enableCheckpointing(10, CheckpointingMode.EXACTLY_ONCE);
-        return env;
+    private static StreamExecutionEnvironment getTestStreamEnv() throws IOException {
+        return new FlinkToDeltaSink(new String[]{}).getExecutionEnvironment();
     }
 
     @BeforeEach
@@ -107,8 +103,8 @@ public class TestFlinkToDeltaSink {
         stream.setParallelism(numSources);
 
         // delta info
-        org.apache.flink.core.fs.Path deltaTable = new org.apache.flink.core.fs.Path(deltaTablePath);
-        var config = new Configuration();
+        final Path deltaTable = new Path(deltaTablePath);
+        final var config = new Configuration();
         DeltaSink<RowData> deltaSink = DeltaSink
                 .forRowData(
                         deltaTable,
@@ -180,11 +176,17 @@ public class TestFlinkToDeltaSink {
      */
     private void runFlinkJobInBackground(RowType rowType,
                                          List<RowData> testData) {
-        new Thread(() -> runFlinkJob(rowType, testData)).start();
+        new Thread(() -> {
+            try {
+                runFlinkJob(rowType, testData);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     private void runFlinkJob(RowType rowType,
-                             List<RowData> testData) {
+                             List<RowData> testData) throws IOException {
         StreamExecutionEnvironment env = getTestStreamEnv();
         env.registerType(Ecommerce.class);
 
