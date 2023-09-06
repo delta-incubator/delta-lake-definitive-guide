@@ -47,6 +47,7 @@ public class DeltaSourceToDeltaSink extends DeltaFlinkBase {
                         "Delta Lake Source: " + source.getTablePath().toString())
                 .setParallelism(NUM_SOURCES)
                 .setDescription("DeltaLake source reader")
+                .forward()
                 .sinkTo(sink)
                 .setParallelism(NUM_SINKS)
                 .setDescription("Writes to DeltaLake using DeltaSink.")
