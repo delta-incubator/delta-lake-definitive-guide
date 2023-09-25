@@ -1,20 +1,19 @@
 package io.delta.dldgv2.ch05;
 
+import io.delta.flink.internal.options.DeltaOptionValidationException;
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.graph.StreamNode;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.junit.jupiter.api.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import static io.delta.dldgv2.ch05.DeltaTestUtils.buildCluster;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestDeltaSourceToDeltaSink {
 
@@ -25,7 +24,11 @@ public class TestDeltaSourceToDeltaSink {
     private String deltaTablePath;
 
     private static StreamExecutionEnvironment getTestStreamEnv() throws IOException {
-        return new DeltaSourceToDeltaSink(new String[]{ "" }).getExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setRestartStrategy(RestartStrategies.noRestart());
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.enableCheckpointing(100, CheckpointingMode.EXACTLY_ONCE);
+        return env;
     }
 
 
@@ -56,7 +59,7 @@ public class TestDeltaSourceToDeltaSink {
     }
 
     @Test
-    public void testReadProjectWriteDeltaToDelta() throws Exception {
+    public void testReadProjectWriteDeltaToDelta() throws DeltaOptionValidationException, Exception {
         final DeltaSourceToDeltaSink app = new DeltaSourceToDeltaSink(new String[] {
                 "delta-source-app-w-columns-timestamp.properties"
         });
@@ -86,13 +89,5 @@ public class TestDeltaSourceToDeltaSink {
         final JobExecutionResult result = env.execute("DeltaToDeltaStreamingApp");
 
     }
-
-    /*
-    var streamGraph = env.getStreamGraph();
-        final StringJoiner joiner = new StringJoiner(">");
-        streamGraph.getStreamNodes().stream().map(StreamNode::getOperatorDescription).forEach(joiner::add);
-        var theGraph = joiner.toString();
-     */
-
 
 }

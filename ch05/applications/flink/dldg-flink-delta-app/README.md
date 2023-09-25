@@ -5,6 +5,7 @@ In order to compile the application (java), you will need the following.
 ## Pre-Requisites
 * JDK 11 (install manually or `brew install java11`)
 * Maven 3.9 (install manually or `brew install mvn`)
+* Docker Runtime
 * Docker Compose 3.7+ - for running alongside Chapter 5
 * [Apache Flink (1.17.1)](https://flink.apache.org/downloads/) 
 
@@ -39,7 +40,8 @@ $FLINK_HOME/bin/flink run \
   --detached \
   --jobmanager 127.0.0.1:8888 \
   -c io.delta.dldgv2.ch05.FlinkToDeltaSink \
-  --jarfile ./ch05/applications/flink/dldg-flink-delta-app/target/delta-flink-examples.jar
+  --jarfile ./ch05/applications/flink/dldg-flink-delta-app/target/delta-flink-examples.jar \
+  app.properties
 ~~~
 The `jobmanager` host:port information points to the `published` port which is `8888`. See the `docker-compose-*` file if
 you are unable to connect to Flink.

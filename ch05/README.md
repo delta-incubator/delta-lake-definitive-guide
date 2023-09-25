@@ -5,7 +5,7 @@
 docker network create dldg
 ~~~
 
-## Working with Apache Flink
+## Working with the Apache Flink Delta Lake Connector
 To follow along with the book, you will need an Apache Flink cluster. To run things locally, you can start spin up a Flink cluster using one of the two _docker compose_ templates (x86_64 or arm64). 
 > If you are unsure of your CPU type, take a look at the note `Finding your CPU type` below.
 
@@ -56,6 +56,9 @@ docker exec -it kafka-rp \
 ```
 {"event_time": "2023-08-30T00:00:00Z","event_type": "view","product_id": 4782,"category_id": 2053013552326770905,"category_code": "appliances.environment.water_heater","brand": "heater3","price": 2789.0,"user_id": 195,"user_session": "19ae88e1-4a02-4b57-94a8-a46f6c6c60c4"}
 ```
+```
+{"event_time": "2023-09-21T00:00:00Z","event_type": "view","product_id": 4783,"category_id": 2051113552326770905,"category_code": "appliances.televisions","brand": "sony","price": 2789.0,"user_id": 196,"user_session": "19ae88e1-4a02-4b57-94a8-a46f6c6c60c4"}
+```
 
 4. When you want to remove the topic, or just start over
 ```
@@ -65,3 +68,50 @@ docker exec -it kafka-rp \
 
 ## Writing to Delta Lake using Flink
 Using the _official_ Delta Lake connector for Apache Flink allows us to 
+
+
+# Trino
+> Requires the Hive Metastore + Object Store (using MinIO or bring your own s3 or other store to the table)
+
+[Delta Lake: Plugin](https://github.com/trinodb/trino/tree/426/plugin/trino-delta-lake)
+
+
+## Running Trino using Docker
+
+> Notes: The version of trino at the time of writing is `426`.
+> * docker pull trinodb/trino:426-arm64
+> * docker pull trinodb/trino:426-amd64
+> * apache/hive: 3.1.3 and 4.0.0 is in beta2 (at time of writing)
+
+[Hive Standalone Metastore](https://hub.docker.com/r/apache/hive)
+
+* [Docker Docs](https://trino.io/docs/current/installation/containers.html)
+
+** Launch the Trino docker using the following**
+```
+docker-compose -f ch05/docker-compose-trino.yaml
+```
+or the following for Apple Silicon or ARM based cpus
+```
+docker-compose -f ch05/docker-compose-trino-arm64.yaml
+```
+
+## Executing SQL Commands via the Trino CLI
+> With the docker image up and running
+
+```
+docker exec -it trinodb trino
+```
+
+> To launch with custom configs: --volume $PWD/etc:/etc/trino trinodb/trino
+
+```
+catalogs: -> /etc/trino/
+plugins: -> /usr/lib/trino/plugins
+```
+
+## Trino Delta Connector
+> https://trino.io/docs/current/connector/delta-lake.html
+
+> Java Version (openjdk 17.0.8.1+1) in container
+

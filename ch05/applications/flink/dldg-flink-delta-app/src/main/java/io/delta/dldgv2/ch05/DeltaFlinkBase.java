@@ -91,18 +91,16 @@ public abstract class DeltaFlinkBase {
 
         DeltaUtils.prepareDirs(deltaTablePath.getPath(), deleteTableIfExists);
         logger.info(String.format("deltaTablePath=%s  deleteIfExists?=%b", deltaTablePath.getPath(), deleteTableIfExists));
-        boolean mergeSchema = this.appProps.getBoolean("delta.sink.mergeSchema", false);
+        boolean mergeSchemaOpt = this.appProps.getBoolean("delta.sink.mergeSchema", false);
 
         final RowDataDeltaSinkBuilder deltaSinkBuilder = DeltaSink.forRowData(
                 deltaTablePath,
                 new Configuration(),
                 rowType
         );
-        // todo - follow up with example using delta sink options (the documentation eludes me)
-        getPartitionColumnsForSink().map(list -> deltaSinkBuilder.withPartitionColumns(list.toArray(new String[0])));
-        deltaSinkBuilder.withMergeSchema(mergeSchema);
 
-        // todo - set options based on configs (options take string, boolean, int and long values)
+        getPartitionColumnsForSink().map(list -> deltaSinkBuilder.withPartitionColumns(list.toArray(new String[0])));
+        deltaSinkBuilder.withMergeSchema(mergeSchemaOpt);
 
         return deltaSinkBuilder.build();
     }
@@ -139,6 +137,9 @@ public abstract class DeltaFlinkBase {
                 sourceDeltaTable,
                 new Configuration()
         );
+
+        deltaSourceBuilder.option("parquetBatchSize", 1000);
+
         getSourceColumnNames().map(deltaSourceBuilder::columnNames);
         getStartingVersion().map(deltaSourceBuilder::versionAsOf);
         getTimestampAsOf().map(deltaSourceBuilder::timestampAsOf);
@@ -166,6 +167,9 @@ public abstract class DeltaFlinkBase {
                 new Configuration()
         ).updateCheckIntervalMillis(checkSourceForNewDataInterval);
 
+        /* provides ways to ignore upstream changes or provide the batch size for the internal parquet reader */
+        deltaSourceBuilder.option("ignoreChanges", true);
+        deltaSourceBuilder.option("parquetBatchSize", 1000);
         getSourceColumnNames().map(deltaSourceBuilder::columnNames);
         getStartingVersion().map(deltaSourceBuilder::startingVersion);
         getTimestampAsOf().map(deltaSourceBuilder::startingTimestamp);

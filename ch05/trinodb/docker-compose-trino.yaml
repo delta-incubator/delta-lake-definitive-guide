@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  trinodb:
+    image: trinodb/trino:426-amd64
+    platform: linux/arm64
+    hostname: trinodb
+    container_name: trinodb
+    ports:
+      - target: 8080
+        published: 9090
+        protocol: tcp
+        mode: host
+
+networks:
+  dldg:
+    external: true
+    name: dldg
+

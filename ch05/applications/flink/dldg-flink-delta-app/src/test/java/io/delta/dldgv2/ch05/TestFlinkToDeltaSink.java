@@ -3,6 +3,7 @@ package io.delta.dldgv2.ch05;
 import io.delta.dldgv2.ch05.pojo.Ecommerce;
 import io.delta.flink.sink.DeltaSink;
 import io.delta.standalone.DeltaLog;
+import io.delta.standalone.internal.DeltaConfigs;
 import io.delta.standalone.types.StructField;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
@@ -131,7 +132,6 @@ public class TestFlinkToDeltaSink {
         // we can read it back
 
         final DeltaLog deltaLog = DeltaLog.forTable(DeltaTestUtils.getHadoopConf(), deltaTablePath);
-
         var records = DeltaTestUtils.ParquetUtil.readAndValidateAllTableRecords(deltaLog);
 
         assertEquals(records, numberOfRecords);
