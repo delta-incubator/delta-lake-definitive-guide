@@ -3,14 +3,23 @@ version: "3.7"
 services:
   trinodb:
     image: trinodb/trino:426-amd64
-    platform: linux/arm64
+    platform: linux/amd64
     hostname: trinodb
     container_name: trinodb
+    volumes:
+      - $PWD/etc/catalog/delta.properties:/etc/trino/catalog/delta.properties
+      - $PWD/conf:/etc/hadoop/conf/
     ports:
       - target: 8080
         published: 9090
         protocol: tcp
         mode: host
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-minio}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-minio_admin}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-1}
+    networks:
+      - dldg
 
 networks:
   dldg:

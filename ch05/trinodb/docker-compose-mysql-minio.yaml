@@ -1,0 +1,59 @@
+version: "3.7"
+
+services:
+  mysql:
+    image: mysql:8.0.34
+    platform: linux/arm64
+    hostname: mysql
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+      - ${PWD}/data/mysqldir:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=default
+      - MYSQL_USER=dataeng
+      - MYSQL_PASSWORD=dataengineering_user
+      - MYSQL_ROOT_PASSWORD=dataengineering
+    healthcheck:
+      interval: 5s
+      retries: 10
+    ports:
+      - 3306:3306
+    networks:
+      - dldg
+  
+  minio:
+    image: minio/minio:RELEASE.2023-09-23T03-47-50Z
+    platform: linux/arm64
+    hostname: minio
+    container_name: minio
+    volumes:
+      - ${PWD}/data/minio/:/opt/data
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio_admin
+    command: ["minio", "server", "--console-address", ":9001", "/opt/data"]
+    expose: 
+      - 9000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    networks:
+      - dldg
+
+networks:
+  dldg:
+    external: true
+    name: dldg
