@@ -19,8 +19,12 @@ clean: ## Clean up development resourcs
 $(VIRTUALENV): #nodoc: Create a Python virtualenv for development
 	python3 -m venv $(VIRTUALENV)
 
-python-deps: $(VIRTUALENV) ## Install the Python dependencies
-	$(VIRTUALENV)/bin/pip install deltalake
+python-deps: $(VIRTUALENV) $(VIRTUALENV)/.installed ## Install the Python dependencies
+
+## Using this file to denote that the install has successfully run
+$(VIRTUALENV)/.installed:
+	$(VIRTUALENV)/bin/pip install deltalake pandas
+	touch $(VIRTUALENV)/.installed
 
 # These variables only exist to test command presence
 CARGO:=$(shell which cargo)
@@ -44,3 +48,20 @@ build-zips: rust-deps ## Build the uploadable Lambda zips
 	(cd rust-example && cargo lambda build --release --output-format zip)
 
 
+### TEST
+.PHONY: test-python test
+test: test-python ## Run all tests
+
+test-python: python-deps ## Test the python specific code
+	# Before testing, clean the generated data from ./data
+	git clean -Xf -- ./data/gen
+	python -m doctest -v -f python-snippets.md
+
+
+#@# DOWNLOAD DATA
+.PHONY: download
+download: data/co2_mm_mlo.csv ## Download some datasets for experimentation
+
+# Downloads the last month's observation from NOAA on atmospheric CO2
+data/co2_mm_mlo.csv:
+	mkdir -p data && cd data && curl -O https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.csv
