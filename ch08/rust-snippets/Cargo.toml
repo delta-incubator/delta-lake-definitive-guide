@@ -1,0 +1,9 @@
+[package]
+name = "rust-snippets"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.79"
+deltalake = { version = "0.16.5", features = ["datafusion"] }
+tokio = "1.35.1"
