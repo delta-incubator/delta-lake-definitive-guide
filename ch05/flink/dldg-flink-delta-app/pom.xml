@@ -12,7 +12,7 @@
     <url>https://github.com/delta-incubator/delta-lake-definitive-guide</url>
 
     <properties>
-        <delta-connectors-version>0.6.0</delta-connectors-version>
+        <delta-connectors-version>3.0.0</delta-connectors-version>
         <flink-version>1.17.1</flink-version>
         <hadoop-version>3.3.6</hadoop-version>
         <jdk.version>11</jdk.version>

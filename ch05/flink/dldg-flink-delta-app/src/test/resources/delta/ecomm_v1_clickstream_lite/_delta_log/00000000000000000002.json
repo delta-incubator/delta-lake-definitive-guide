@@ -1,0 +1,3 @@
+{"commitInfo":{"timestamp":1705514432015,"operation":"STREAMING UPDATE","operationParameters":{"mode":"Append","partitionBy":"[\"event_type\"]"},"readVersion":1,"isolationLevel":"Serializable","isBlindAppend":true,"operationMetrics":{"numOutputRows":"1000","numAddedFiles":"1","numOutputBytes":"9993","numRemovedFiles":"0"},"engineInfo":"flink-engine/1.16.1-flink-delta-connector/3.0.0 Delta-Standalone/3.0.0"}}
+{"txn":{"appId":"2f810a2b-5e42-47a2-bc20-ff7df36cb234","version":2,"lastUpdated":1705514432013}}
+{"add":{"path":"event_type=view/part-11efb36f-93a7-4d2d-99d8-e7dbd83b7487-0.snappy.parquet","partitionValues":{"event_type":"view"},"size":9993,"modificationTime":1705514431927,"dataChange":true}}

@@ -125,7 +125,7 @@ public class TestFlinkToDeltaSink {
         // this will block and that is good since we can test that things all worked as expected
         env.execute();
 
-
+        // if you want to test the source in a step-wise way (use the next line)
         //final DeltaSource<RowData> deltaSourceData = DeltaSource.forBoundedRowData(deltaTable, config).build();
 
         // now that the application has run through all the records, and created the Delta Table.

@@ -45,7 +45,7 @@ public class TestMainDeltaApp {
     public void shouldGenerateDeltaSourceAndDeltaSinkWithAltConfig() throws AssertionError, Exception {
         var app = new DeltaSourceToDeltaSink(new String[]{ "delta-source-app-w-columns-timestamp.properties" });
         var deltaBoundedSource = app.getBoundedDeltaSource();
-        assertEquals(deltaBoundedSource.getTablePath().toString(), "src/test/resources/data/ecomm_v1_clickstream");
+        assertEquals(deltaBoundedSource.getTablePath().toString(), "src/test/resources/delta/ecomm_v1_clickstream");
 
         // simple test to ensure the configuration is being picked up correctly
         if (app.getSourceColumnNames().isPresent()) {
