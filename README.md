@@ -9,6 +9,7 @@
   - Denny Lee
   - Prashanth Babu Velanati Venkata
   - Tristen Wentling
+  - [R Tyler Croy](https://github.com/rtyler)
 
 We have collected here the code snippets found in the book (and a few extras too).
 
@@ -20,7 +21,7 @@ We have collected here the code snippets found in the book (and a few extras too
 ## Chapter 5: Diving into the Delta Lake Ecosystem
 ## Chapter 6: Maintaining your Delta Lake
 ## Chapter 7: Under the Sediments (Delta Lake Internals)
-## Chapter 8: tbd
+## Chapter 8: Building native apps with Detla Lake
 ## Chapter 9: Streaming In and Out of your Delta Lake
 ## Chapter 10: Advanced Feature
 ## Chapter 11: Architecting your Lakehouse
