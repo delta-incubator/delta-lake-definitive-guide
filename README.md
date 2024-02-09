@@ -5,7 +5,7 @@
   - Second
 
 - Authors/Contributors
-  - Scott Haines
+  - [Scott Haines](https://github.com/newfront)
   - Denny Lee
   - Prashanth Babu Velanati Venkata
   - Tristen Wentling
