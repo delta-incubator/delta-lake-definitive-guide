@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+  deltalake:
+    image: deltaio/delta-docker:latest_arm64
+    platform: linux/arm64
+    hostname: dl-hitchhikers_guide
+    container_name: dl-hitchhikers_guide
+    environment:
+      - SPARK_LOCAL_HOSTNAME=localhost
+    volumes:
+      - "${PWD}/notebooks:/opt/spark/work-dir/notebooks"
+      - "${PWD}/startup.sh:/opt/spark/work-dir/startup.sh"
+      - ../data:/opt/spark/work-dir/data
+      - ../datasets/:/opt/spark/work-dir/datasets
+    ports:
+      - 8888-8889:8888-8889
+      - 4040:4040
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 16G
+        reservations:
+          cpus: '1'
+          memory: 4G
+    restart: always
+    depends_on:
+      - kafka
+    networks:
+      - dldg
+  
+  kafka:
+    hostname: kafka-rp
+    container_name: kafka-rp
+    image: docker.redpanda.com/redpandadata/redpanda:v23.1.13
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://kafka-rp:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://kafka-rp:28082,OUTSIDE://localhost:8082
+    networks:
+      - dldg
+    ports:
+      - "8082:8082"
+      - "9092:9092"
+      - "28082:28082"
+      - "29092:29092"
+
+networks:
+  dldg:
+    external: true
+    name: dldg
