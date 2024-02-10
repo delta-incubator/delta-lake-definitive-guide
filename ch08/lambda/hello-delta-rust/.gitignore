@@ -1,1 +1,7 @@
 /target
+Cargo.lock
+*.hcl
+*.tfstate*
+deploy/.terraform
+terraform.tfvars
+.precheck
