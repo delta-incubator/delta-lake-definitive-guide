@@ -1,0 +1,17 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+:toc: macro
+
+= Delta Lake Lambda Examples
+
+This directory contains a couple different examples of Lambdas for
+demonstration purposes. To make the configuration of Lambdas easier, it also
+contains some basic Terraform code for provisioning the Lambdas.
+
+
+toc::[]
