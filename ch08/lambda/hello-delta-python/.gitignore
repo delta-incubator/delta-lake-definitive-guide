@@ -1,0 +1,6 @@
+.precheck
+venv/
+target/
+.depends
+deploy/.terraform*
+deploy/terraform.tfstate*

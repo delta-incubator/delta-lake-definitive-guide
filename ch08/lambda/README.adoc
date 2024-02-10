@@ -15,3 +15,11 @@ contains some basic Terraform code for provisioning the Lambdas.
 
 
 toc::[]
+
+== Rust
+
+All of the Rust examples use link:https://www.cargo-lambda.info/[cargo lambda]
+for their builds. Please refer to that tool's documentation for installation
+details.
+
+== Python
