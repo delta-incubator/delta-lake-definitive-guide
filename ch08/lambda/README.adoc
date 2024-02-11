@@ -23,3 +23,14 @@ for their builds. Please refer to that tool's documentation for installation
 details.
 
 == Python
+
+Packaging of Python Lambda functions can be tricky depending on the
+dependencies that a Lambda function requires at runtime. The source code `.zip`
+file can contain up to about 5MB of code, which is typically insufficient for
+pulling in dependencies.
+link:https://docs.aws.amazon.com/lambda/latest/dg/packaging-layers.html[Lambda
+layers] can be be used for packaging up dependencies but these have their own
+limitations, as the expanded size of a layer's `.zip` file cannot exceed
+roughly 250MB. The `hello-delta-python` demonstrates the layer based approach,
+re-using an AWS provided layer. Other examples use Docker images. The specific
+needs of your application may vary
