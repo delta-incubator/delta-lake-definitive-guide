@@ -1,0 +1,31 @@
+version: "3.7"
+
+services:
+  metastore:
+    image: apache/hive:3.1.3
+    platform: linux/amd64
+    hostname: metastore
+    container_name: metastore
+    volumes:
+      - ${PWD}/jars/hadoop-aws-3.2.0.jar:/opt/hive/lib/hadoop-aws-3.2.0.jar
+      - ${PWD}/jars/mysql-connector-java-8.0.23.jar:/opt/hive/lib/mysql-connector-java-8.0.23.jar
+      - ${PWD}/jars/aws-java-sdk-bundle-1.11.375.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.375.jar
+      - ${PWD}/conf:/opt/hive/conf
+    environment:
+      - SERVICE_NAME=metastore
+      - DB_DRIVER=mysql
+      - IS_RESUME="true"
+    expose:
+      - 9083
+    ports:
+      - target: 9083
+        published: 9083
+        protocol: tcp
+        mode: host
+    networks:
+      - dldg
+
+networks:
+  dldg:
+    external: true
+    name: dldg
