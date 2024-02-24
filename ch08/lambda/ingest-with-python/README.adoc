@@ -1,0 +1,15 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+:toc: macro
+
+= Ingesting data to Delta (Python)
+
+toc::[]
+
+This function corresponds to the example highlighted in Chapter 8 for ingesting
+a JSON array over HTTP and appending records to a Delta Lake table.
