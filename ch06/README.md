@@ -6,10 +6,10 @@
 
 ### Running Without Docker Compose
 ~~~
-export DLDG_CHAPTER_DIR=~/path/to/delta-lake-definitive-guide/ch6
+export DLDG_CHAPTER_DIR=~/path/to/delta-lake-definitive-guide/ch06
 docker run --rm -it \
   --name delta_quickstart \
-  -v $DLDG_CHAPTER_DIR/:/opt/spark/work-dir/ch6 \
+  -v $DLDG_CHAPTER_DIR/:/opt/spark/work-dir/ch06 \
   -p 8888-8889:8888-8889 \
   deltaio/delta-docker:latest
 ~~~
@@ -38,7 +38,7 @@ To access the server, open this file in a browser:
 
 and if you've run the compose command using `-d` for detached mode, you can run `docker logs deltalake-quickstart` to get the jupyter lab url.
 
-Using the jupyter lab url, authenticate, and then go to `http://127.0.0.1:8888/lab/tree/ch6` to follow along with the chapter.
+Using the jupyter lab url, authenticate, and then go to `http://127.0.0.1:8888/lab/tree/ch06` to follow along with the chapter.
 
 ### Spin down the local Environment
 > Note: if you've started the environment using `docker compose ... -d` then you will need to use the following command.
