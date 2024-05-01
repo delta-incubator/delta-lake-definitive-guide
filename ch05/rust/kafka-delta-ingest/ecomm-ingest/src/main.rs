@@ -2,27 +2,37 @@ use tracing::info;
 use deltalake::Path;
 use deltalake::kernel::{DataType, PrimitiveType, StructField};
 use deltalake::*;
+use std::env::{set_var, var};
 use deltalake::errors::DeltaTableError;
 
 #[tokio::main]
 async fn main() -> Result<(), DeltaTableError> {
     info!("Logger initialized");
-
+    set_var("USE_SSL", "0");
+    set_var("AWS_ENDPOINT_URL", "http://0.0.0.0:4566");
+    set_var("AWS_ACCESS_KEY_ID", "test");
+    set_var("AWS_SECRET_ACCESS_KEY", "test");
+    set_var("AWS_DEFAULT_REGION", "us-east-1");
+    set_var("AWS_S3_BUCKET", "dldg");
+    /* note: you can point this to anywhere you want your fresh delta table to be created
+      // set_var("TABLE_URI", "data/ecomm-ingest");
+    */
     let table_uri = std::env::var("TABLE_URI").map_err(|e| DeltaTableError::GenericError {
         source: Box::new(e),
     })?;
     info!("Using the location of: {:?}", table_uri);
+    let table_path: Path = Path::parse(&table_uri)?;
     
-    let table_path = Path::parse(&table_uri)?;
-    
-    let maybe_table = deltalake::open_table(&table_path).await;
+    let maybe_table = open_table(&table_path).await;
     let _table = match maybe_table {
         Ok(table) => table,
         Err(DeltaTableError::NotATable(_)) => {
-            info!("It doesn't look like our delta table has been created");
+            info!("It doesn't look like our delta table has been created {:?}", table_path);
             create_empty_table(&table_path).await
         }
-        Err(err) => panic!("{:?}", err),
+        Err(err) => {
+            panic!("There is a problem with our table {:?} {:?}", table_path, err)
+        }
     };
 
     return Ok(());
