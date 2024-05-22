@@ -1,0 +1,13 @@
+[package]
+name = "ecomm-ingest"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.79"
+chrono = "0.4.33"
+deltalake = { version = "0.17.1", features = ["datafusion"] }
+tokio = "1.35.1"
+tracing = { version = "0.1", features = ["log"] }
