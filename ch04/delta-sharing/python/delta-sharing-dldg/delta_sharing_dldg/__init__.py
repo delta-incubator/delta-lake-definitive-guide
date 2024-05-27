@@ -9,13 +9,13 @@ def main(sharing_client: Sharing, spark_session: SparkSession):
     tables = sharing_client.list_tables(schemas[0])
 
     lending_tree = tables[3]
-    share_url = sharing_client.share_url(lending_tree)
+    table_url = sharing_client.table_url(lending_tree)
 
     df = (
         spark_session
         .read
         .format("deltaSharing")
-        .load(share_url)
+        .load(table_url)
     )
 
     df.printSchema()
@@ -39,6 +39,8 @@ if __name__ == "__main__":
         SparkSession.builder
         .master("local[*]")
         .config("spark.jars.packages", "io.delta:delta-sharing-spark_2.12:3.1.0")
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         .appName("delta_sharing_dldg")
         .getOrCreate()
     )

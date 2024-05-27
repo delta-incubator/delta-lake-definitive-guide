@@ -35,9 +35,9 @@ class Sharing:
         print(tables)
         return tables
 
-    def share_url(self, table: Table) -> str:
-        share_uri = f"#{table.share}.{table.schema}.{table.name}"
-        return f"{self._profile.as_posix()}{share_uri}"
+    def table_url(self, table: Table) -> str:
+        table_uri = f"#{table.share}.{table.schema}.{table.name}"
+        return f"{self._profile.as_posix()}{table_uri}"
 
 
 
