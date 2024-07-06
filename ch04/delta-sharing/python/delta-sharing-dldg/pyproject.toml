@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "delta-sharing-dldg"
+version = "0.1.0"
+description = "Example Delta Sharing Client"
+authors = ["Scott Haines <zen@datacircus.io>"]
+readme = "README.md"
+packages = [
+    { include = "delta_sharing_dldg" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+delta-sharing = "^1.0.5"
+pyspark = "^3.5.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "7.3.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
