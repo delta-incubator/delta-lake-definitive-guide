@@ -1,0 +1,3 @@
+rust/kafka-delta-ingest/target
+rust/kafka-delta-ingest/Cargo.lock
+*/target

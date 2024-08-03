@@ -1,9 +1,5 @@
 # Delta Lake: The Definitive Guide Code Samples
 
-# Notes
-- Version
-  - Second
-
 - Authors/Contributors
   - [Scott Haines](https://github.com/newfront)
   - Denny Lee
@@ -11,29 +7,18 @@
   - Tristen Wentling
   - [R Tyler Croy](https://github.com/rtyler)
 
-We have collected here the code snippets found in the book (and a few extras too).
-
 # Contents
 ## Chapter 1: What is Delta Lake?
 ## Chapter 2: Installing Delta Lake
-## Chapter 3: Using Delta Lake
-## Chapter 4: Delta Sharing and Unity Catalog
-
-## Chapter 5: Diving into the Delta Lake Ecosystem
-[Chapter 5 : Source Code](./ch05/)
-
-### Apache Flink
-* [Environment Setup](./ch05/flink/README.md)
-* [Java Application](./ch05/flink/dldg-flink-delta-app/README.md)
-* **Docker Containers**: [amd64](./ch05/flink/docker-compose-flink.yaml) , [arm64](./ch05/flink/docker-compose-arm64-flink.yaml) 
-
-## Chapter 6: Maintaining your Delta Lake
-## Chapter 7: Under the Sediments (Delta Lake Internals)
-## Chapter 8: Building native apps with Detla Lake
-## Chapter 9: Streaming In and Out of your Delta Lake
-## Chapter 10: Advanced Feature
-## Chapter 11: Architecting your Lakehouse
-## Chapter 12: Performance Tuning
-## Chapter 13: Design Patterns
-## Chapter 14: Security and Governance
-## Appendix
+## Chapter 3: Essential Delta Lake Operations
+## Chapter 4: Diving into the Delta Lake Ecosystem
+## Chapter 5: Maintaining your Delta Lake
+## Chapter 6: Building Native Applications with Delta Lake (Rust)
+## Chapter 7: Streaming In and Out of Your Delta Lake
+## Chapter 8: Advanced Features
+## Chapter 9: Architecting Your Lakehouse
+## Chapter 10: Performance Tuning: Optimizing your Data Pipelines with Delta Lake
+## Chapter 11: Successful Design Patterns
+## Chapter 12: Foundations of Lakehouse Governance and Security
+## Chapter 13: Metadata Management, Data Flow, and Lineage
+## Chapter 14: Data Sharing with the Delta Sharing Protocol

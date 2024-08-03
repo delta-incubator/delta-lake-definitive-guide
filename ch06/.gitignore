@@ -1,4 +1,2 @@
-.ipynb_checkpoints
-metastore_db/
-spark-warehouse/
-derby.log
+.virtualenv
+rust-example/Cargo.lock
