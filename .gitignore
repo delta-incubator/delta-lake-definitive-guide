@@ -3,5 +3,6 @@
 metastore_db/
 spark-warehouse/
 derby.log
-data/
+data/delta
+data/medallion_1
 .DS_Store
