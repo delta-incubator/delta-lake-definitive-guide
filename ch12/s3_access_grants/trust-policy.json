@@ -1,0 +1,16 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "access-grants.s3.amazonaws.com"
+            },
+            "Action": [
+                "sts:AssumeRole",
+                "sts:SetSourceIdentity",
+                "sts:SetContext"
+            ]
+        }
+    ]
+}
