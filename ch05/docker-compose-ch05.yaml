@@ -7,7 +7,8 @@ services:
     hostname: deltalake-quickstart
     container_name: deltalake-quickstart
     volumes:
-      - ${PWD}:/opt/spark/work-dir/ch6
+      - ${PWD}:/opt/spark/work-dir/ch5
+      - ${PWD}/../datasets:/opt/spark/work-dir/ch5
     ports:
       - 8888-8889:8888-8889
     restart: always
